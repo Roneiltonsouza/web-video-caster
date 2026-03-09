@@ -24,11 +24,7 @@
             transition: all 0.3s;
         }
 
-        body.dark-mode {
-            background: #0f172a;
-            color: #f1f5f9;
-        }
-
+        body.dark-mode { background: #0f172a; color: #f1f5f9; }
         .container { max-width: 1400px; margin: 0 auto; padding: 0 1rem; }
 
         header {
@@ -40,7 +36,6 @@
         }
 
         .header-content { display: flex; justify-content: space-between; align-items: center; }
-
         .logo {
             display: flex; align-items: center; gap: 0.5rem;
             font-size: 1.5rem; font-weight: bold;
@@ -51,33 +46,15 @@
         .section { margin: 2rem 0; }
         .section-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; }
 
-        /* Grade de Marcas */
-        .brands-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 1rem;
-        }
-
+        .brands-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; }
         .brand-card {
-            background: var(--card);
-            border: 2px solid var(--border);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.3s;
+            background: var(--card); border: 2px solid var(--border);
+            border-radius: 1rem; padding: 1.5rem; text-align: center;
+            cursor: pointer; transition: 0.3s;
         }
-
         .brand-card:hover { border-color: var(--primary); transform: translateY(-3px); }
 
-        /* Área de Transmissão */
-        .mirroring-container {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 1rem;
-            padding: 2rem;
-        }
-
+        .mirroring-container { background: var(--card); border: 1px solid var(--border); border-radius: 1rem; padding: 2rem; }
         .screen-preview {
             width: 100%; height: 350px; background: #000;
             border-radius: 0.75rem; display: flex; align-items: center;
@@ -87,18 +64,13 @@
 
         video { width: 100%; height: 100%; object-fit: contain; }
 
-        /* Inputs e Botões */
         .connection-box {
             display: flex; flex-direction: column; gap: 1rem;
             margin-bottom: 1.5rem; padding: 1rem;
             background: var(--background); border-radius: 0.5rem;
         }
 
-        input {
-            padding: 0.8rem; border-radius: 0.5rem;
-            border: 1px solid var(--border); width: 100%;
-            font-size: 1rem;
-        }
+        input { padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--border); width: 100%; font-size: 1rem; }
 
         .btn-primary {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
@@ -107,9 +79,7 @@
         }
 
         .btn-secondary { background: #64748b; color: white; border: none; padding: 0.8rem; border-radius: 0.5rem; cursor: pointer; }
-
-        .id-display { font-weight: bold; color: var(--primary); font-size: 1.2rem; }
-        .hidden { display: none; }
+        .id-display { font-weight: bold; color: var(--primary); font-size: 1.2rem; word-break: break-all; }
     </style>
 </head>
 <body>
@@ -140,7 +110,7 @@
             <div class="connection-box">
                 <div>
                     <button class="btn-primary" onclick="initPeer()">1. Gerar meu código de conexão</button>
-                    <p style="margin-top:5px;">Seu ID: <span id="my-id" class="id-display">---</span></p>
+                    <p style="margin-top:10px;">Seu ID: <span id="my-id" class="id-display">---</span></p>
                 </div>
                 <hr>
                 <div>
@@ -153,9 +123,9 @@
         <div class="mirroring-container">
             <h2 id="status-text">Status: Aguardando Conexão</h2>
             <div class="screen-preview" id="preview-area">
-                <div id="placeholder">🖥️ A tela aparecerá aqui</div>
+                <div id="placeholder">🖥️ O vídeo aparecerá aqui</div>
             </div>
-            <button class="btn-secondary" style="width:100%" onclick="location.reload()">⏹️ Parar Transmissão</button>
+            <button class="btn-secondary" style="width:100%" onclick="location.reload()">⏹️ Resetar Sistema</button>
         </div>
     </main>
 
@@ -163,7 +133,6 @@
         let peer;
         let localStream;
 
-        // Inicializa o PeerJS para receber ID
         function initPeer() {
             peer = new Peer();
             peer.on('open', (id) => {
@@ -171,30 +140,34 @@
                 document.getElementById('status-text').innerText = "Status: Online. Aguardando chamada...";
             });
 
-            // Quando receber uma chamada de vídeo de outro celular
             peer.on('call', (call) => {
-                call.answer(); // Atende a chamada
+                call.answer();
                 call.on('stream', (remoteStream) => {
                     displayStream(remoteStream);
                 });
             });
         }
 
-        // Inicia o espelhamento da sua tela para o ID digitado
         async function startCellMirroring() {
             const remoteId = document.getElementById('remote-id').value;
             if (!remoteId) return alert("Por favor, insira o ID do outro celular.");
 
             try {
-                localStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                // Solução para Mobile: Usar a câmera em vez da tela para evitar o erro de permissão
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment" }, 
+                    audio: false 
+                });
+                
                 displayStream(localStream);
                 
                 if(!peer) peer = new Peer();
                 peer.call(remoteId, localStream);
                 
-                document.getElementById('status-text').innerText = "Status: Transmitindo Tela...";
+                document.getElementById('status-text').innerText = "Status: Transmitindo Câmera...";
             } catch (err) {
-                alert("Erro ao acessar a tela: " + err);
+                console.error(err);
+                alert("Erro ao acessar câmera: " + err.message);
             }
         }
 
@@ -204,9 +177,9 @@
             const video = document.createElement('video');
             video.srcObject = stream;
             video.autoplay = true;
-            video.playsInline = true;
+            video.playsInline = true; 
             area.appendChild(video);
         }
     </script>
 </body>
-</html>
+    </html>
