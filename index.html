@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Video Caster - Pro</title>
+    <title>Web Video Caster Pro - Screen Mirroring</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -14,6 +14,9 @@
             --card: #ffffff;
             --text: #1e293b;
             --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
         }
 
         body {
@@ -24,7 +27,19 @@
             transition: all 0.3s;
         }
 
-        body.dark-mode { background: #0f172a; color: #f1f5f9; }
+        body.dark-mode { 
+            background: #0f172a; 
+            color: #f1f5f9; 
+        }
+        
+        body.dark-mode .container,
+        body.dark-mode .mirroring-container,
+        body.dark-mode .connection-box,
+        body.dark-mode header {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
         .container { max-width: 1400px; margin: 0 auto; padding: 0 1rem; }
 
         header {
@@ -32,54 +47,417 @@
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border);
             padding: 1rem 0;
-            position: sticky; top: 0; z-index: 100;
+            position: sticky; 
+            top: 0; 
+            z-index: 100;
         }
 
-        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .header-content { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        
         .logo {
-            display: flex; align-items: center; gap: 0.5rem;
-            font-size: 1.5rem; font-weight: bold;
+            display: flex; 
+            align-items: center; 
+            gap: 0.5rem;
+            font-size: 1.5rem; 
+            font-weight: bold;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent;
         }
 
         .section { margin: 2rem 0; }
-        .section-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; }
+        .section-title { 
+            font-size: 1.5rem; 
+            font-weight: bold; 
+            margin-bottom: 1rem; 
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
-        .brands-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; }
+        .brands-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+            gap: 1rem; 
+        }
+        
         .brand-card {
-            background: var(--card); border: 2px solid var(--border);
-            border-radius: 1rem; padding: 1.5rem; text-align: center;
-            cursor: pointer; transition: 0.3s;
+            background: var(--card); 
+            border: 2px solid var(--border);
+            border-radius: 1rem; 
+            padding: 1.5rem; 
+            text-align: center;
+            cursor: pointer; 
+            transition: 0.3s;
         }
-        .brand-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+        
+        .brand-card:hover { 
+            border-color: var(--primary); 
+            transform: translateY(-3px); 
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
 
-        .mirroring-container { background: var(--card); border: 1px solid var(--border); border-radius: 1rem; padding: 2rem; }
+        .mirroring-container { 
+            background: var(--card); 
+            border: 1px solid var(--border); 
+            border-radius: 1rem; 
+            padding: 2rem; 
+        }
+
         .screen-preview {
-            width: 100%; height: 350px; background: #000;
-            border-radius: 0.75rem; display: flex; align-items: center;
-            justify-content: center; color: white; margin: 1.5rem 0;
+            width: 100%; 
+            height: 350px; 
+            background: #000;
+            border-radius: 0.75rem; 
+            display: flex; 
+            align-items: center;
+            justify-content: center; 
+            color: white; 
+            margin: 1.5rem 0;
             overflow: hidden;
+            position: relative;
         }
 
-        video { width: 100%; height: 100%; object-fit: contain; }
+        video { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+        }
 
         .connection-box {
-            display: flex; flex-direction: column; gap: 1rem;
-            margin-bottom: 1.5rem; padding: 1rem;
-            background: var(--background); border-radius: 0.5rem;
+            display: flex; 
+            flex-direction: column; 
+            gap: 1rem;
+            margin-bottom: 1.5rem; 
+            padding: 1rem;
+            background: var(--background); 
+            border-radius: 0.5rem;
         }
 
-        input { padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--border); width: 100%; font-size: 1rem; }
+        input { 
+            padding: 0.8rem; 
+            border-radius: 0.5rem; 
+            border: 1px solid var(--border); 
+            width: 100%; 
+            font-size: 1rem; 
+        }
 
         .btn-primary {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white; border: none; padding: 0.8rem 1.5rem;
-            border-radius: 0.5rem; font-weight: bold; cursor: pointer;
+            color: white; 
+            border: none; 
+            padding: 0.8rem 1.5rem;
+            border-radius: 0.5rem; 
+            font-weight: bold; 
+            cursor: pointer;
+            transition: 0.3s;
         }
 
-        .btn-secondary { background: #64748b; color: white; border: none; padding: 0.8rem; border-radius: 0.5rem; cursor: pointer; }
-        .id-display { font-weight: bold; color: var(--primary); font-size: 1.2rem; word-break: break-all; }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary { 
+            background: #64748b; 
+            color: white; 
+            border: none; 
+            padding: 0.8rem; 
+            border-radius: 0.5rem; 
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .id-display { 
+            font-weight: bold; 
+            color: var(--primary); 
+            font-size: 1.2rem; 
+            word-break: break-all; 
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+
+        .status-offline {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-online {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-connecting {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Screen Mirroring Styles */
+        .screen-mirroring-section {
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .signal-scanner {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .signal-indicator {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--background);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .signal-bars {
+            display: flex;
+            gap: 0.25rem;
+            align-items: flex-end;
+        }
+
+        .signal-bar {
+            width: 4px;
+            background: #ccc;
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        .signal-bar.active {
+            background: var(--success);
+        }
+
+        .signal-bar-1 { height: 8px; }
+        .signal-bar-2 { height: 12px; }
+        .signal-bar-3 { height: 16px; }
+        .signal-bar-4 { height: 20px; }
+
+        .device-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .device-card {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .device-card:hover {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .device-card.connected {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .device-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .device-name {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .device-signal {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .mirror-button-container {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .mirror-button {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 1rem;
+        }
+
+        .mirror-button.screen {
+            background: linear-gradient(135deg, #7c3aed, #2563eb);
+            color: white;
+        }
+
+        .mirror-button.screen:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .mirror-button.camera {
+            background: #e2e8f0;
+            color: var(--text);
+        }
+
+        .mirror-button.camera:hover {
+            background: #cbd5e1;
+        }
+
+        .mirror-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tab {
+            padding: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            color: #64748b;
+            border-bottom: 3px solid transparent;
+            transition: 0.3s;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-box.warning {
+            background: #fffbeb;
+            border-left-color: var(--warning);
+        }
+
+        .info-box.success {
+            background: #f0fdf4;
+            border-left-color: var(--success);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -87,99 +465,461 @@
     <header>
         <div class="container">
             <div class="header-content">
-                <div class="logo">📺 Web Video Caster</div>
-                <button class="btn-secondary" onclick="document.body.classList.toggle('dark-mode')">🌙</button>
+                <div class="logo">📺 Web Video Caster Pro</div>
+                <button class="btn-secondary" onclick="toggleDarkMode()">🌙</button>
             </div>
         </div>
     </header>
 
     <main class="container">
-        <div class="section">
-            <h2 class="section-title">Selecione a Marca da TV</h2>
-            <div class="brands-grid">
-                <div class="brand-card">Samsung</div>
-                <div class="brand-card">LG</div>
-                <div class="brand-card">TCL</div>
-                <div class="brand-card">Roku</div>
-                <div class="brand-card">Sony</div>
+        <!-- Tabs de Navegação -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('tv-brands')">📺 Marcas de TV</button>
+            <button class="tab" onclick="switchTab('screen-mirroring')">🔄 Screen Mirroring</button>
+            <button class="tab" onclick="switchTab('cell-to-cell')">📱 Celular para Celular</button>
+        </div>
+
+        <!-- Tab 1: Marcas de TV -->
+        <div id="tv-brands" class="tab-content active">
+            <div class="section">
+                <h2 class="section-title">📺 Selecione a Marca da TV</h2>
+                <div class="brands-grid">
+                    <div class="brand-card" onclick="selectBrand('Samsung')">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔷</div>
+                        <div>Samsung</div>
+                    </div>
+                    <div class="brand-card" onclick="selectBrand('LG')">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔶</div>
+                        <div>LG</div>
+                    </div>
+                    <div class="brand-card" onclick="selectBrand('TCL')">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🟦</div>
+                        <div>TCL</div>
+                    </div>
+                    <div class="brand-card" onclick="selectBrand('Roku')">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🟪</div>
+                        <div>Roku</div>
+                    </div>
+                    <div class="brand-card" onclick="selectBrand('Sony')">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔲</div>
+                        <div>Sony</div>
+                    </div>
+                    <div class="brand-card" onclick="selectBrand('Philips')">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🟩</div>
+                        <div>Philips</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="section">
-            <h2 class="section-title">Espelhar Celular para Celular</h2>
-            <div class="connection-box">
-                <div>
-                    <button class="btn-primary" onclick="initPeer()">1. Gerar meu código de conexão</button>
-                    <p style="margin-top:10px;">Seu ID: <span id="my-id" class="id-display">---</span></p>
+        <!-- Tab 2: Screen Mirroring -->
+        <div id="screen-mirroring" class="tab-content">
+            <div class="screen-mirroring-section">
+                <h2 class="section-title">🔄 Screen Mirroring - Buscar Dispositivos</h2>
+                
+                <div class="info-box">
+                    <strong>💡 Como usar:</strong> Clique em "Iniciar Varredura" para buscar dispositivos disponíveis na rede. Selecione um dispositivo e clique em "Espelhar Tela" para começar.
                 </div>
-                <hr>
-                <div>
-                    <input type="text" id="remote-id" placeholder="Digite o código do outro celular">
-                    <button class="btn-primary" style="margin-top:10px; width:100%;" onclick="startCellMirroring()">2. Conectar e Transmitir</button>
+
+                <!-- Signal Scanner -->
+                <div class="signal-scanner">
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <button class="btn-primary" onclick="startSignalScan()" id="scan-btn">
+                            <span id="scan-spinner"></span> Iniciar Varredura
+                        </button>
+                        <div id="scan-status" style="font-size: 0.875rem; color: #64748b;">Pronto para varrer</div>
+                    </div>
+
+                    <!-- Signal Indicator -->
+                    <div class="signal-indicator">
+                        <div>Força do Sinal:</div>
+                        <div class="signal-bars">
+                            <div class="signal-bar signal-bar-1" id="bar-1"></div>
+                            <div class="signal-bar signal-bar-2" id="bar-2"></div>
+                            <div class="signal-bar signal-bar-3" id="bar-3"></div>
+                            <div class="signal-bar signal-bar-4" id="bar-4"></div>
+                        </div>
+                        <div id="signal-strength" style="margin-left: 1rem; font-weight: bold;">--</div>
+                    </div>
+                </div>
+
+                <!-- Devices List -->
+                <h3 style="margin-top: 2rem; margin-bottom: 1rem;">📱 Dispositivos Encontrados:</h3>
+                <div class="device-list" id="device-list">
+                    <div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 2rem;">
+                        Nenhum dispositivo encontrado. Clique em "Iniciar Varredura" para buscar.
+                    </div>
+                </div>
+
+                <!-- Selected Device Info -->
+                <div id="selected-device-info" style="display: none; margin-top: 2rem; padding: 1rem; background: var(--background); border-radius: 0.5rem; border: 2px solid var(--success);">
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Dispositivo Selecionado:</strong>
+                        <div id="selected-device-name" style="font-size: 1.2rem; color: var(--primary); margin-top: 0.5rem;"></div>
+                    </div>
+                    <div class="mirror-button-container">
+                        <button class="mirror-button screen" onclick="startScreenMirroring()">
+                            🖥️ Espelhar Tela
+                        </button>
+                        <button class="mirror-button camera" onclick="startCameraMirroring()">
+                            📷 Usar Câmera
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preview Area -->
+                <h3 style="margin-top: 2rem; margin-bottom: 1rem;">📺 Visualização:</h3>
+                <div class="screen-preview" id="preview-area">
+                    <div id="placeholder">🖥️ O vídeo aparecerá aqui</div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button class="btn-danger" style="flex: 1;" onclick="stopMirroring()">⏹️ Parar Espelhamento</button>
+                    <button class="btn-secondary" style="flex: 1;" onclick="resetSystem()">🔄 Resetar Sistema</button>
                 </div>
             </div>
         </div>
 
-        <div class="mirroring-container">
-            <h2 id="status-text">Status: Aguardando Conexão</h2>
-            <div class="screen-preview" id="preview-area">
-                <div id="placeholder">🖥️ O vídeo aparecerá aqui</div>
+        <!-- Tab 3: Celular para Celular -->
+        <div id="cell-to-cell" class="tab-content">
+            <div class="mirroring-container">
+                <h2 class="section-title">📱 Espelhar Celular para Celular</h2>
+                
+                <div class="info-box success">
+                    <strong>✅ Novo:</strong> Agora com suporte completo a compartilhamento de tela (não apenas câmera)!
+                </div>
+
+                <div class="connection-box">
+                    <div>
+                        <h3 style="margin-bottom: 0.5rem;">Passo 1: Gerar Código de Conexão</h3>
+                        <button class="btn-primary" onclick="initPeer()" style="width: 100%;">
+                            🔑 Gerar meu código de conexão
+                        </button>
+                        <p style="margin-top: 10px;">
+                            Seu ID: <span id="my-id" class="id-display">---</span>
+                            <span id="status-badge" class="status-badge status-offline">Offline</span>
+                        </p>
+                    </div>
+                    <hr style="margin: 1rem 0;">
+                    <div>
+                        <h3 style="margin-bottom: 0.5rem;">Passo 2: Conectar e Transmitir</h3>
+                        <input type="text" id="remote-id" placeholder="Digite o código do outro celular">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 10px;">
+                            <button class="btn-primary" onclick="startCellScreenShare()">
+                                🖥️ Compartilhar Tela
+                            </button>
+                            <button class="btn-primary" onclick="startCellCameraShare()">
+                                📷 Compartilhar Câmera
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mirroring-container" style="margin-top: 2rem;">
+                    <h2 id="status-text">Status: Aguardando Conexão</h2>
+                    <div class="screen-preview" id="preview-area-cell">
+                        <div id="placeholder-cell">📱 O vídeo aparecerá aqui</div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <button class="btn-danger" style="flex: 1;" onclick="stopCellMirroring()">⏹️ Parar Transmissão</button>
+                        <button class="btn-secondary" style="flex: 1;" onclick="location.reload()">🔄 Resetar Sistema</button>
+                    </div>
+                </div>
             </div>
-            <button class="btn-secondary" style="width:100%" onclick="location.reload()">⏹️ Resetar Sistema</button>
         </div>
     </main>
 
     <script>
+        // ============= VARIÁVEIS GLOBAIS =============
         let peer;
         let localStream;
+        let currentConnection;
+        let selectedDevice = null;
+        let isScanning = false;
+        let discoveredDevices = [];
 
+        // ============= FUNÇÕES DE INTERFACE =============
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        }
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function selectBrand(brand) {
+            alert(`Você selecionou: ${brand}\n\nEste é um exemplo. Em produção, isso conectaria à TV ${brand}.`);
+        }
+
+        // ============= SCREEN MIRRORING FUNCTIONS =============
+        function startSignalScan() {
+            if (isScanning) return;
+            
+            isScanning = true;
+            document.getElementById('scan-btn').disabled = true;
+            document.getElementById('scan-spinner').innerHTML = '<span class="loading-spinner"></span> ';
+            document.getElementById('scan-status').innerText = 'Varrendo rede...';
+
+            // Simular varredura de dispositivos
+            discoveredDevices = [
+                { id: 'tv-samsung-001', name: 'Samsung TV - Sala', icon: '📺', signal: 95 },
+                { id: 'tv-lg-002', name: 'LG TV - Quarto', icon: '📺', signal: 75 },
+                { id: 'chromecast-001', name: 'Chromecast - Cozinha', icon: '🎬', signal: 85 },
+                { id: 'roku-001', name: 'Roku Stick', icon: '📱', signal: 65 }
+            ];
+
+            setTimeout(() => {
+                updateSignalBars(90);
+                displayDevices();
+                document.getElementById('scan-status').innerText = `✅ ${discoveredDevices.length} dispositivo(s) encontrado(s)`;
+                document.getElementById('scan-btn').disabled = false;
+                document.getElementById('scan-spinner').innerHTML = '';
+                isScanning = false;
+            }, 2000);
+        }
+
+        function updateSignalBars(strength) {
+            const bars = document.querySelectorAll('.signal-bar');
+            bars.forEach(bar => bar.classList.remove('active'));
+
+            const activeCount = Math.ceil((strength / 100) * 4);
+            for (let i = 0; i < activeCount; i++) {
+                bars[i].classList.add('active');
+            }
+
+            const strengthText = strength >= 80 ? 'Excelente' : strength >= 60 ? 'Bom' : 'Fraco';
+            document.getElementById('signal-strength').innerText = `${strength}% - ${strengthText}`;
+        }
+
+        function displayDevices() {
+            const deviceList = document.getElementById('device-list');
+            deviceList.innerHTML = '';
+
+            discoveredDevices.forEach(device => {
+                const card = document.createElement('div');
+                card.className = 'device-card';
+                card.innerHTML = `
+                    <div class="device-icon">${device.icon}</div>
+                    <div class="device-name">${device.name}</div>
+                    <div class="device-signal">📶 ${device.signal}%</div>
+                    <button class="btn-primary" style="width: 100%; margin-top: 0.5rem;" onclick="selectDevice('${device.id}', '${device.name}')">
+                        Selecionar
+                    </button>
+                `;
+                deviceList.appendChild(card);
+            });
+        }
+
+        function selectDevice(deviceId, deviceName) {
+            selectedDevice = { id: deviceId, name: deviceName };
+            document.getElementById('selected-device-name').innerText = deviceName;
+            document.getElementById('selected-device-info').style.display = 'block';
+            
+            // Highlight selected device
+            document.querySelectorAll('.device-card').forEach(card => {
+                card.classList.remove('connected');
+            });
+            event.target.closest('.device-card').classList.add('connected');
+        }
+
+        async function startScreenMirroring() {
+            if (!selectedDevice) {
+                alert('Por favor, selecione um dispositivo primeiro.');
+                return;
+            }
+
+            try {
+                // Usar getDisplayMedia para capturar a tela
+                localStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { 
+                        cursor: 'always',
+                        displaySurface: 'monitor'
+                    },
+                    audio: false
+                });
+
+                displayStream(localStream, 'preview-area');
+                document.getElementById('status-text').innerText = `Status: Espelhando tela para ${selectedDevice.name}`;
+            } catch (err) {
+                if (err.name === 'NotAllowedError') {
+                    alert('Permissão negada. Você precisa permitir o compartilhamento de tela.');
+                } else {
+                    alert('Erro ao capturar tela: ' + err.message);
+                }
+            }
+        }
+
+        async function startCameraMirroring() {
+            if (!selectedDevice) {
+                alert('Por favor, selecione um dispositivo primeiro.');
+                return;
+            }
+
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' },
+                    audio: false
+                });
+
+                displayStream(localStream, 'preview-area');
+                document.getElementById('status-text').innerText = `Status: Transmitindo câmera para ${selectedDevice.name}`;
+            } catch (err) {
+                alert('Erro ao acessar câmera: ' + err.message);
+            }
+        }
+
+        function stopMirroring() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            document.getElementById('preview-area').innerHTML = '<div id="placeholder">🖥️ O vídeo aparecerá aqui</div>';
+            document.getElementById('status-text').innerText = 'Status: Parado';
+        }
+
+        function resetSystem() {
+            stopMirroring();
+            selectedDevice = null;
+            document.getElementById('selected-device-info').style.display = 'none';
+            discoveredDevices = [];
+            document.getElementById('device-list').innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 2rem;">Nenhum dispositivo encontrado. Clique em "Iniciar Varredura" para buscar.</div>';
+            document.getElementById('scan-status').innerText = 'Pronto para varrer';
+        }
+
+        // ============= CELL TO CELL FUNCTIONS =============
         function initPeer() {
             peer = new Peer();
+            
             peer.on('open', (id) => {
                 document.getElementById('my-id').innerText = id;
+                document.getElementById('status-badge').innerText = 'Online';
+                document.getElementById('status-badge').className = 'status-badge status-online';
                 document.getElementById('status-text').innerText = "Status: Online. Aguardando chamada...";
             });
 
             peer.on('call', (call) => {
                 call.answer();
                 call.on('stream', (remoteStream) => {
-                    displayStream(remoteStream);
+                    displayStream(remoteStream, 'preview-area-cell');
+                    document.getElementById('status-text').innerText = "Status: Recebendo transmissão...";
                 });
+            });
+
+            peer.on('error', (err) => {
+                console.error('Peer error:', err);
+                document.getElementById('status-badge').innerText = 'Erro';
+                document.getElementById('status-badge').className = 'status-badge status-offline';
             });
         }
 
-        async function startCellMirroring() {
+        async function startCellScreenShare() {
             const remoteId = document.getElementById('remote-id').value;
-            if (!remoteId) return alert("Por favor, insira o ID do outro celular.");
+            if (!remoteId) {
+                alert("Por favor, insira o ID do outro celular.");
+                return;
+            }
 
             try {
-                // Solução para Mobile: Usar a câmera em vez da tela para evitar o erro de permissão
-                localStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "environment" }, 
-                    audio: false 
+                // CORREÇÃO: Usar getDisplayMedia para capturar a tela do celular
+                localStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { 
+                        cursor: 'always'
+                    },
+                    audio: false
                 });
-                
-                displayStream(localStream);
-                
-                if(!peer) peer = new Peer();
+
+                displayStream(localStream, 'preview-area-cell');
+
+                if (!peer) peer = new Peer();
                 peer.call(remoteId, localStream);
-                
+
+                document.getElementById('status-text').innerText = "Status: Transmitindo Tela...";
+                document.getElementById('status-badge').innerText = 'Transmitindo';
+                document.getElementById('status-badge').className = 'status-badge status-online pulse';
+            } catch (err) {
+                if (err.name === 'NotAllowedError') {
+                    alert("Permissão negada. Você precisa permitir o compartilhamento de tela.");
+                } else {
+                    console.error(err);
+                    alert("Erro ao compartilhar tela: " + err.message);
+                }
+            }
+        }
+
+        async function startCellCameraShare() {
+            const remoteId = document.getElementById('remote-id').value;
+            if (!remoteId) {
+                alert("Por favor, insira o ID do outro celular.");
+                return;
+            }
+
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment" },
+                    audio: false
+                });
+
+                displayStream(localStream, 'preview-area-cell');
+
+                if (!peer) peer = new Peer();
+                peer.call(remoteId, localStream);
+
                 document.getElementById('status-text').innerText = "Status: Transmitindo Câmera...";
+                document.getElementById('status-badge').innerText = 'Transmitindo';
+                document.getElementById('status-badge').className = 'status-badge status-online pulse';
             } catch (err) {
                 console.error(err);
                 alert("Erro ao acessar câmera: " + err.message);
             }
         }
 
-        function displayStream(stream) {
-            const area = document.getElementById('preview-area');
+        function stopCellMirroring() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            document.getElementById('preview-area-cell').innerHTML = '<div id="placeholder-cell">📱 O vídeo aparecerá aqui</div>';
+            document.getElementById('status-text').innerText = 'Status: Parado';
+            document.getElementById('status-badge').innerText = 'Offline';
+            document.getElementById('status-badge').className = 'status-badge status-offline';
+        }
+
+        function displayStream(stream, previewId) {
+            const area = document.getElementById(previewId);
             area.innerHTML = '';
             const video = document.createElement('video');
             video.srcObject = stream;
             video.autoplay = true;
-            video.playsInline = true; 
+            video.playsInline = true;
+            video.muted = true;
             area.appendChild(video);
         }
+
+        // ============= INICIALIZAÇÃO =============
+        window.addEventListener('DOMContentLoaded', () => {
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            if (darkMode) {
+                document.body.classList.add('dark-mode');
+            }
+        });
+
+        // Limpar streams ao sair da página
+        window.addEventListener('beforeunload', () => {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+        });
     </script>
 </body>
-    </html>
+</html>
