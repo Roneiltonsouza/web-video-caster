@@ -3,909 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Screen Mirror Pro - Controle Remoto</title>
+    <title>Web Video Caster - Pro</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-            color: #ffffff;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        /* Header */
-        .header {
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .header p {
-            color: #9ca3af;
-            font-size: 1rem;
-        }
-
-        /* Main Grid */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 24px;
-            margin-bottom: 30px;
-        }
-
-        @media (max-width: 1024px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Panels */
-        .panel {
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid rgba(71, 85, 105, 0.5);
-            border-radius: 12px;
-            padding: 24px;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-        }
-
-        .panel:hover {
-            border-color: rgba(71, 85, 105, 0.8);
-            background: rgba(30, 41, 59, 0.95);
-        }
-
-        .panel h2 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Left Sidebar */
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        /* ID Box */
-        .id-section {
-            background: rgba(15, 23, 42, 0.5);
-            border: 2px dashed rgba(59, 130, 246, 0.5);
-            border-radius: 10px;
-            padding: 16px;
-            text-align: center;
-        }
-
-        .id-box {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            padding: 12px;
-            border-radius: 8px;
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 0.9rem;
-            word-break: break-all;
-            margin: 12px 0;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: #60a5fa;
-        }
-
-        .id-box:hover {
-            background: rgba(30, 58, 138, 0.3);
-            border-color: rgba(59, 130, 246, 0.6);
-        }
-
-        .id-box.copied {
-            color: #34d399;
-            border-color: rgba(52, 211, 153, 0.6);
-        }
-
-        /* Input */
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid rgba(71, 85, 105, 0.5);
-            border-radius: 8px;
-            background: rgba(15, 23, 42, 0.8);
-            color: #ffffff;
-            font-size: 1rem;
-            transition: all 0.2s ease;
-            margin-bottom: 12px;
-        }
-
-        input::placeholder {
-            color: #6b7280;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: rgba(59, 130, 246, 0.8);
-            background: rgba(15, 23, 42, 0.95);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        /* Buttons */
-        button {
-            width: 100%;
-            padding: 12px 16px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-        }
-
-        button:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
-            color: white;
-        }
-
-        .btn-tertiary {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-            color: white;
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-        }
-
-        /* Status Indicator */
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            background: rgba(15, 23, 42, 0.5);
-            border-radius: 8px;
-            margin-bottom: 12px;
-        }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        .status-dot.online {
-            background: #10b981;
-        }
-
-        .status-dot.offline {
-            background: #ef4444;
-        }
-
-        .status-dot.transmitting {
-            background: #f59e0b;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .status-text {
-            font-size: 0.9rem;
-            color: #d1d5db;
-        }
-
-        /* Info Box */
-        .info-box {
-            background: rgba(59, 130, 246, 0.1);
-            border-left: 4px solid rgba(59, 130, 246, 0.6);
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            color: #93c5fd;
-            margin-bottom: 12px;
-        }
-
-        .info-box.warning {
-            background: rgba(245, 158, 11, 0.1);
-            border-left-color: rgba(245, 158, 11, 0.6);
-            color: #fcd34d;
-        }
-
-        .info-box.success {
-            background: rgba(16, 185, 129, 0.1);
-            border-left-color: rgba(16, 185, 129, 0.6);
-            color: #86efac;
-        }
-
-        /* Video Container */
-        .video-section {
-            background: rgba(15, 23, 42, 0.8);
-            border: 2px solid rgba(59, 130, 246, 0.3);
-            border-radius: 12px;
-            overflow: hidden;
-            aspect-ratio: 16 / 9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            margin-bottom: 16px;
-        }
-
-        .video-section.active {
-            border-color: rgba(59, 130, 246, 0.8);
-            box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
-        }
-
-        .video-section.receiving {
-            border-color: rgba(59, 130, 246, 0.8);
-            box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
-        }
-
-        .video-section.transmitting {
-            border-color: rgba(168, 85, 247, 0.8);
-            box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background: #000000;
-        }
-
-        .video-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            color: #6b7280;
-            text-align: center;
-        }
-
-        .video-placeholder svg {
-            width: 64px;
-            height: 64px;
-            opacity: 0.5;
-        }
-
-        /* Status Badge */
-        .status-badge {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: rgba(239, 68, 68, 0.9);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            animation: pulse 1s infinite;
-        }
-
-        .status-badge.controlling {
-            background: rgba(59, 130, 246, 0.9);
-        }
-
-        .status-badge.transmitting {
-            background: rgba(168, 85, 247, 0.9);
-        }
-
-        /* Logs */
-        .logs {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(71, 85, 105, 0.3);
-            border-radius: 8px;
-            padding: 12px;
-            height: 200px;
-            overflow-y: auto;
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 0.75rem;
-            color: #9ca3af;
-        }
-
-        .log-entry {
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(71, 85, 105, 0.2);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .log-entry.success {
-            color: #86efac;
-        }
-
-        .log-entry.error {
-            color: #fca5a5;
-        }
-
-        .log-entry.info {
-            color: #93c5fd;
-        }
-
-        /* Controls Info */
-        .controls-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 12px;
-        }
-
-        .control-item {
-            background: rgba(15, 23, 42, 0.5);
-            border: 1px solid rgba(71, 85, 105, 0.3);
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .control-item strong {
-            color: #60a5fa;
-        }
-
-        /* How It Works */
-        .how-it-works {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 24px;
-        }
-
-        .how-it-works h3 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: #93c5fd;
-        }
-
-        .how-it-works ol {
-            list-style: none;
-            counter-reset: step-counter;
-        }
-
-        .how-it-works li {
-            counter-increment: step-counter;
-            margin-bottom: 10px;
-            padding-left: 30px;
-            position: relative;
-            font-size: 0.95rem;
-            color: #d1d5db;
-        }
-
-        .how-it-works li:before {
-            content: counter(step-counter);
-            position: absolute;
-            left: 0;
-            top: 0;
-            background: rgba(59, 130, 246, 0.3);
-            border: 1px solid rgba(59, 130, 246, 0.6);
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #60a5fa;
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.5);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(71, 85, 105, 0.5);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(71, 85, 105, 0.8);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.8rem;
-            }
-
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .controls-info {
-                grid-template-columns: 1fr;
-            }
-
-            button {
-                font-size: 0.95rem;
-                padding: 10px 12px;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #2563eb;
+            --secondary: #7c3aed;
+            --background: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--background); color: var(--text); padding-bottom: 120px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
+
+        header { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 1rem 0; position: sticky; top: 0; z-index: 100; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+
+        /* Barra de Ação Fixa no Rodapé */
+        .footer-action {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--card); padding: 1rem; border-top: 2px solid var(--border);
+            display: flex; gap: 10px; justify-content: center; z-index: 1000;
+        }
+
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 1rem 2rem; border-radius: 0.5rem; font-weight: bold; cursor: pointer; }
+        
+        .section { margin: 2rem 0; }
+        .id-display { font-weight: bold; color: var(--secondary); background: #eee; padding: 5px; border-radius: 4px; }
+        .screen-preview { width: 100%; height: 300px; background: #000; border-radius: 1rem; display: flex; align-items: center; justify-content: center; color: white; margin-top: 1rem; overflow: hidden; }
+        video { width: 100%; height: 100%; object-fit: contain; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <h1>📱 Screen Mirror Pro</h1>
-            <p>Controle remoto em tempo real via P2P (estilo TeamViewer)</p>
-        </div>
 
-        <!-- Main Content -->
-        <div class="main-grid">
-            <!-- Left Sidebar -->
-            <div class="sidebar">
-                <!-- ID Section -->
-                <div class="panel id-section">
-                    <h2>🔑 Seu ID de Conexão</h2>
-                    <div class="id-box" id="myIdBox" onclick="copyId()">Carregando...</div>
-                    <p style="font-size: 0.8rem; color: #9ca3af; text-align: center; margin-top: 8px;">
-                        Clique para copiar
-                    </p>
-                </div>
-
-                <!-- Connect Section -->
-                <div class="panel">
-                    <h2>🔗 Conectar a Outro Dispositivo</h2>
-                    <input 
-                        type="text" 
-                        id="remoteIdInput" 
-                        placeholder="Cole o ID do parceiro..."
-                    >
-                    
-                    <button class="btn-secondary" id="shareScreenBtn" onclick="startSharing('screen')">
-                        🖥️ Compartilhar Tela
-                    </button>
-                    <button class="btn-tertiary" id="shareCameraBtn" onclick="startSharing('camera')">
-                        📷 Compartilhar Câmera
-                    </button>
-                    <button class="btn-danger" id="stopBtn" onclick="stopSharing()" style="display: none;">
-                        ⏹️ Parar Transmissão
-                    </button>
-                </div>
-
-                <!-- Status Section -->
-                <div class="panel">
-                    <h2>📊 Status</h2>
-                    <div class="status-indicator">
-                        <div class="status-dot online" id="statusDot"></div>
-                        <div class="status-text" id="statusText">Iniciando...</div>
-                    </div>
-
-                    <div id="transmittingInfo" style="display: none;">
-                        <div class="info-box warning">
-                            📡 Transmitindo para: <span id="transmittingTo" style="font-weight: bold;"></span>
-                        </div>
-                    </div>
-
-                    <div id="receivingInfo" style="display: none;">
-                        <div class="info-box success">
-                            👁️ Controlando transmissão remota
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Controls Info -->
-                <div class="panel" id="controlsPanel" style="display: none;">
-                    <h2>⌨️ Controles</h2>
-                    <div class="controls-info">
-                        <div class="control-item">
-                            <strong>🖱️</strong> Clique para controlar
-                        </div>
-                        <div class="control-item">
-                            <strong>⌨️</strong> Use o teclado
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Logs -->
-                <div class="panel">
-                    <h2>📋 Logs</h2>
-                    <div class="logs" id="logsContainer">
-                        <div class="log-entry info">Sistema carregado...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Content -->
-            <div>
-                <!-- Video Display -->
-                <div class="video-section" id="videoSection">
-                    <div class="video-placeholder">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        <p>Compartilhe sua tela ou câmera para começar</p>
-                    </div>
-                </div>
-
-                <!-- Video Elements (Hidden) -->
-                <video id="remoteVideo" style="display: none;"></video>
-                <video id="localVideo" style="display: none;"></video>
-
-                <!-- How It Works -->
-                <div class="how-it-works">
-                    <h3>Como Funciona?</h3>
-                    <ol>
-                        <li>Copie seu ID e compartilhe com outro dispositivo</li>
-                        <li>Cole o ID do outro dispositivo no campo "Conectar"</li>
-                        <li>Clique em "Compartilhar Tela" ou "Compartilhar Câmera"</li>
-                        <li>O outro dispositivo poderá visualizar e controlar usando mouse e teclado</li>
-                    </ol>
-                </div>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">📺 Web Video Caster</div>
+                <div id="my-id-display">Seu ID: <span class="id-display" id="my-id">Carregando...</span></div>
             </div>
         </div>
+    </header>
+
+    <main class="container">
+        <div class="section">
+            <h2 id="status-text">Status: Iniciando...</h2>
+            <div class="screen-preview" id="preview-area">
+                <div id="placeholder">Aguardando conexão...</div>
+            </div>
+        </div>
+    </main>
+
+    <div class="footer-action">
+        <input type="text" id="remote-id" placeholder="ID do destinatário" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        <button class="btn-primary" onclick="startCellMirroring()">Conectar e Transmitir</button>
     </div>
 
-    <!-- PeerJS Library -->
-    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-
     <script>
-        // Estado da aplicação
-        let peer = null;
-        let myId = '';
-        let currentCall = null;
-        let localStream = null;
-        let dataChannel = null;
-        let isTransmitting = false;
-        let isReceiving = false;
-        let transmissionType = null;
+        let peer;
+        let localStream;
 
-        // Elementos do DOM
-        const myIdBox = document.getElementById('myIdBox');
-        const remoteIdInput = document.getElementById('remoteIdInput');
-        const statusDot = document.getElementById('statusDot');
-        const statusText = document.getElementById('statusText');
-        const shareScreenBtn = document.getElementById('shareScreenBtn');
-        const shareCameraBtn = document.getElementById('shareCameraBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const logsContainer = document.getElementById('logsContainer');
-        const videoSection = document.getElementById('videoSection');
-        const remoteVideo = document.getElementById('remoteVideo');
-        const localVideo = document.getElementById('localVideo');
-        const transmittingInfo = document.getElementById('transmittingInfo');
-        const receivingInfo = document.getElementById('receivingInfo');
-        const transmittingTo = document.getElementById('transmittingTo');
-        const controlsPanel = document.getElementById('controlsPanel');
-
-        // Inicializar PeerJS
+        // Inicialização com ID Persistente
         function initPeer() {
-            peer = new Peer();
+            let myId = localStorage.getItem('device_peer_id');
+            
+            // Se não tiver um ID, gera um único baseado em tempo/aleatório
+            if (!myId) {
+                myId = 'vc_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('device_peer_id', myId);
+            }
+
+            document.getElementById('my-id').innerText = myId;
+            peer = new Peer(myId);
 
             peer.on('open', (id) => {
-                myId = id;
-                myIdBox.textContent = id;
-                updateStatus('Conectado e Pronto', 'online');
-                addLog('✅ ID gerado com sucesso', 'success');
+                document.getElementById('status-text').innerText = "Status: Online (ID: " + id + ")";
             });
 
             peer.on('call', (call) => {
-                addLog('📞 Recebendo chamada...', 'info');
                 call.answer();
-
                 call.on('stream', (remoteStream) => {
-                    addLog('📹 Stream recebido!', 'success');
-                    remoteVideo.srcObject = remoteStream;
-                    showRemoteVideo();
-                    isReceiving = true;
-                    updateStatus('Visualizando Transmissão', 'online');
-                    receivingInfo.style.display = 'block';
-                    controlsPanel.style.display = 'block';
-                });
-
-                call.on('close', () => {
-                    addLog('❌ Conexão encerrada', 'error');
-                    hideRemoteVideo();
-                    isReceiving = false;
-                    updateStatus('Conexão Finalizada', 'offline');
-                    receivingInfo.style.display = 'none';
-                    controlsPanel.style.display = 'none';
-                });
-
-                currentCall = call;
-            });
-
-            peer.on('connection', (conn) => {
-                addLog('🔗 Conexão de dados estabelecida', 'success');
-                dataChannel = conn;
-
-                conn.on('data', (data) => {
-                    handleRemoteControl(data);
+                    displayStream(remoteStream);
                 });
             });
-
-            peer.on('error', (err) => {
-                addLog('❌ Erro: ' + err.type, 'error');
-                updateStatus('Erro de Conexão', 'offline');
-            });
         }
 
-        // Adicionar log
-        function addLog(msg, type = 'info') {
-            const div = document.createElement('div');
-            div.className = `log-entry ${type}`;
-            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            logsContainer.insertBefore(div, logsContainer.firstChild);
-
-            while (logsContainer.children.length > 20) {
-                logsContainer.removeChild(logsContainer.lastChild);
-            }
-        }
-
-        // Atualizar status
-        function updateStatus(text, type) {
-            statusText.textContent = text;
-            statusDot.className = `status-dot ${type}`;
-        }
-
-        // Copiar ID
-        function copyId() {
-            if (myId === '') return;
-            navigator.clipboard.writeText(myId).then(() => {
-                const originalText = myIdBox.textContent;
-                myIdBox.textContent = '✅ COPIADO!';
-                myIdBox.classList.add('copied');
-                addLog('✅ ID copiado para a área de transferência', 'success');
-                setTimeout(() => {
-                    myIdBox.textContent = originalText;
-                    myIdBox.classList.remove('copied');
-                }, 1500);
-            });
-        }
-
-        // Iniciar compartilhamento
-        async function startSharing(type) {
-            const remoteId = remoteIdInput.value.trim();
-
-            if (!remoteId) {
-                alert('Por favor, insira o ID do dispositivo remoto');
-                return;
-            }
-
-            if (remoteId === myId) {
-                alert('Você não pode conectar ao seu próprio ID');
-                return;
-            }
+        async function startCellMirroring() {
+            const remoteId = document.getElementById('remote-id').value;
+            if (!remoteId) return alert("Insira o ID de destino.");
 
             try {
-                let stream;
-
-                if (type === 'screen') {
-                    addLog('🖥️ Solicitando permissão de tela...', 'info');
-                    stream = await navigator.mediaDevices.getDisplayMedia({
-                        video: { cursor: 'always' },
-                        audio: true,
-                    });
-                } else {
-                    addLog('📷 Solicitando permissão de câmera...', 'info');
-                    stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: 'user' },
-                        audio: true,
-                    });
-                    localVideo.srcObject = stream;
-                }
-
-                localStream = stream;
-
-                addLog('🔗 Conectando ao ID remoto...', 'info');
-                const call = peer.call(remoteId, stream);
-
-                // Criar data channel
-                const conn = peer.connect(remoteId);
-                conn.on('open', () => {
-                    addLog('✅ Canal de controle aberto', 'success');
-                    dataChannel = conn;
-                });
-
-                call.on('close', () => {
-                    stopSharing();
-                });
-
-                currentCall = call;
-                isTransmitting = true;
-                transmissionType = type;
-                updateStatus(`Transmitindo ${type === 'screen' ? 'Tela' : 'Câmera'}`, 'transmitting');
-                transmittingTo.textContent = remoteId.slice(0, 12) + '...';
-                transmittingInfo.style.display = 'block';
-
-                shareScreenBtn.disabled = true;
-                shareCameraBtn.disabled = true;
-                stopBtn.style.display = 'block';
-
-                addLog('✅ Transmissão iniciada', 'success');
-
-                stream.getVideoTracks()[0].onended = () => {
-                    addLog('⏹️ Transmissão parada pelo usuário', 'info');
-                    stopSharing();
-                };
+                localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+                displayStream(localStream);
+                
+                const call = peer.call(remoteId, localStream);
+                document.getElementById('status-text').innerText = "Status: Transmitindo para " + remoteId;
             } catch (err) {
-                addLog('❌ Erro: ' + err.message, 'error');
-                alert('Erro ao iniciar: ' + err.message);
+                alert("Erro ao acessar câmera: " + err.message);
             }
         }
 
-        // Parar compartilhamento
-        function stopSharing() {
-            if (localStream) {
-                localStream.getTracks().forEach((track) => track.stop());
-                localStream = null;
-            }
-
-            if (currentCall) {
-                currentCall.close();
-                currentCall = null;
-            }
-
-            isTransmitting = false;
-            transmissionType = null;
-            updateStatus('Transmissão Parada', 'offline');
-            transmittingInfo.style.display = 'none';
-
-            shareScreenBtn.disabled = false;
-            shareCameraBtn.disabled = false;
-            stopBtn.style.display = 'none';
-
-            addLog('⏹️ Transmissão encerrada', 'info');
+        function displayStream(stream) {
+            const area = document.getElementById('preview-area');
+            area.innerHTML = '';
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.autoplay = true;
+            video.playsInline = true;
+            area.appendChild(video);
         }
 
-        // Mostrar vídeo remoto
-        function showRemoteVideo() {
-            videoSection.innerHTML = '';
-            videoSection.appendChild(remoteVideo);
-            remoteVideo.style.display = 'block';
-            videoSection.classList.add('receiving');
-            videoSection.classList.remove('transmitting');
-
-            const badge = document.createElement('div');
-            badge.className = 'status-badge controlling';
-            badge.innerHTML = '<span>●</span> Controlando';
-            videoSection.appendChild(badge);
-
-            remoteVideo.play().catch((e) => {
-                addLog('⚠️ Aguardando interação para reproduzir áudio/vídeo', 'info');
-            });
-        }
-
-        // Esconder vídeo remoto
-        function hideRemoteVideo() {
-            videoSection.innerHTML = `
-                <div class="video-placeholder">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    <p>Compartilhe sua tela ou câmera para começar</p>
-                </div>
-            `;
-            videoSection.classList.remove('receiving', 'transmitting');
-        }
-
-        // Enviar controle remoto
-        function sendRemoteControl(data) {
-            if (dataChannel && dataChannel.readyState === 'open') {
-                dataChannel.send(JSON.stringify(data));
-            }
-        }
-
-        // Processar controle remoto
-        function handleRemoteControl(data) {
-            try {
-                const parsed = JSON.parse(data);
-                if (parsed.type === 'mousemove') {
-                    console.log('Mouse:', parsed.x, parsed.y);
-                } else if (parsed.type === 'click') {
-                    console.log('Clique:', parsed.x, parsed.y);
-                } else if (parsed.type === 'keydown') {
-                    console.log('Tecla:', parsed.key);
-                }
-            } catch (e) {
-                console.error('Erro ao processar dados:', e);
-            }
-        }
-
-        // Event listeners para controle remoto
-        remoteVideo.addEventListener('mousemove', (e) => {
-            if (!isReceiving) return;
-            const rect = remoteVideo.getBoundingClientRect();
-            const x = ((e.clientX - rect.left) / rect.width) * 100;
-            const y = ((e.clientY - rect.top) / rect.height) * 100;
-            sendRemoteControl({ type: 'mousemove', x, y });
-        });
-
-        remoteVideo.addEventListener('click', (e) => {
-            if (!isReceiving) return;
-            const rect = remoteVideo.getBoundingClientRect();
-            const x = ((e.clientX - rect.left) / rect.width) * 100;
-            const y = ((e.clientY - rect.top) / rect.height) * 100;
-            sendRemoteControl({ type: 'click', x, y, button: e.button });
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (!isReceiving) return;
-            sendRemoteControl({
-                type: 'keydown',
-                key: e.key,
-                code: e.code,
-                ctrlKey: e.ctrlKey,
-                shiftKey: e.shiftKey,
-                altKey: e.altKey,
-            });
-        });
-
-        document.addEventListener('keyup', (e) => {
-            if (!isReceiving) return;
-            sendRemoteControl({
-                type: 'keyup',
-                key: e.key,
-                code: e.code,
-            });
-        });
-
-        // Inicializar ao carregar
-        window.addEventListener('load', () => {
-            initPeer();
-        });
+        // Inicia o Peer ao carregar a página
+        window.onload = initPeer;
     </script>
 </body>
 </html>
