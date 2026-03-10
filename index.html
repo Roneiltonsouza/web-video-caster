@@ -1,107 +1,46 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Video Caster - Pro</title>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #2563eb; --secondary: #7c3aed; --card: #ffffff; --border: #e2e8f0; }
-        body { font-family: sans-serif; background: #f8fafc; padding-bottom: 140px; }
-        header { background: #fff; padding: 1rem; border-bottom: 1px solid var(--border); text-align: center; }
+<script>
+    let currentFacingMode = "environment"; // Inicia com a traseira
+
+    // Botão Mágico atualizado para alternar câmera
+    function toggleCamera() {
+        // Alterna o estado
+        currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
         
-        .main-container { padding: 1rem; }
-        .screen-preview { width: 100%; height: 300px; background: #000; border-radius: 1rem; display: flex; align-items: center; justify-content: center; color: white; margin: 1rem 0; overflow: hidden; }
-        video { width: 100%; height: 100%; object-fit: contain; }
-
-        /* Rodapé Fixo */
-        .footer-action { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 1rem; border-top: 2px solid var(--border); display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
-        .btn-row { display: flex; gap: 10px; }
-        button { flex: 1; padding: 1rem; border: none; border-radius: 0.5rem; font-weight: bold; cursor: pointer; color: white; }
-        .btn-transmit { background: var(--primary); }
-        .btn-magic { background: var(--secondary); }
-        input { padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; }
-    </style>
-</head>
-<body>
-
-    <header>
-        <div>📺 Seu ID: <b id="my-id">Carregando...</b></div>
-        <p id="status-text" style="font-size: 0.8rem; color: #666;">Aguardando ação...</p>
-    </header>
-
-    <main class="main-container">
-        <div class="screen-preview" id="preview-area">
-            <div id="placeholder">O vídeo aparecerá aqui</div>
-        </div>
-    </main>
-
-    <div class="footer-action">
-        <input type="text" id="remote-id" placeholder="ID do amigo">
-        <div class="btn-row">
-            <button class="btn-transmit" onclick="startMirroring(true)">Transmitir (+Áudio)</button>
-            <button class="btn-magic" onclick="prepareReceiver()">🪄 Botão Mágico (Receber)</button>
-        </div>
-    </div>
-
-    <script>
-        let peer;
-        let localStream;
-
-        // Inicia o Peer com ID persistente
-        function initPeer() {
-            let myId = localStorage.getItem('device_peer_id') || 'vc_' + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem('device_peer_id', myId);
-            document.getElementById('my-id').innerText = myId;
-
-            peer = new Peer(myId);
+        // Se já estiver transmitindo, precisamos reiniciar o stream com a nova câmera
+        if (localStream) {
+            // Para o stream atual
+            localStream.getTracks().forEach(track => track.stop());
             
-            peer.on('call', (call) => {
-                call.answer(); // Responde automaticamente
-                call.on('stream', (remoteStream) => {
-                    displayStream(remoteStream);
-                    document.getElementById('status-text').innerText = "Recebendo transmissão...";
-                });
+            // Re-inicia com o novo facingMode
+            restartStream();
+        } else {
+            alert("Modo alternado para: " + (currentFacingMode === "environment" ? "Traseira" : "Frontal"));
+        }
+    }
+
+    async function restartStream() {
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: { exact: currentFacingMode } }, 
+                audio: true 
             });
-        }
-
-        // Função para Transmitir (Vídeo + Áudio)
-        async function startMirroring(includeAudio) {
-            const remoteId = document.getElementById('remote-id').value;
-            if (!remoteId) return alert("Insira o ID do amigo!");
-
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "environment" }, 
-                    audio: includeAudio 
-                });
-                displayStream(localStream);
-                peer.call(remoteId, localStream);
-                document.getElementById('status-text').innerText = "Transmitindo...";
-            } catch (err) {
-                alert("Erro: " + err.message);
+            displayStream(localStream);
+            // Se houver uma chamada ativa (call), deve-se substituir a trilha (track)
+            if (window.activeCall) {
+                const videoTrack = localStream.getVideoTracks()[0];
+                const sender = window.activeCall.peerConnection.getSenders().find(s => s.track.kind === "video");
+                sender.replaceTrack(videoTrack);
             }
+        } catch (err) {
+            // Fallback caso a câmera frontal/traseira não exista
+            alert("Erro ao trocar câmera: " + err.message);
         }
+    }
+</script>
 
-        // Botão Mágico: Prepara o dispositivo para receber chamadas
-        function prepareReceiver() {
-            document.getElementById('status-text').innerText = "Modo Receptor: Aguardando convite...";
-            alert("Modo Mágico Ativado! Agora aguarde seu amigo digitar seu ID no aparelho dele.");
-        }
-
-        function displayStream(stream) {
-            const area = document.getElementById('preview-area');
-            area.innerHTML = '';
-            const video = document.createElement('video');
-            video.srcObject = stream;
-            video.autoplay = true;
-            video.playsInline = true;
-            video.controls = true; // Permite ao usuário ativar o som se necessário
-            area.appendChild(video);
-        }
-
-        window.onload = initPeer;
-    </script>
-</body>
-</html>
+<div class="footer-action">
+    <div class="btn-row">
+        <button class="btn-magic" onclick="toggleCamera()">🔄 Inverter Câmera</button>
+        <button class="btn-transmit" onclick="startMirroring(true)">Transmitir</button>
+    </div>
+</div>
