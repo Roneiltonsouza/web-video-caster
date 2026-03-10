@@ -1,46 +1,148 @@
-<script>
-    let currentFacingMode = "environment"; // Inicia com a traseira
-
-    // Botão Mágico atualizado para alternar câmera
-    function toggleCamera() {
-        // Alterna o estado
-        currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Video Caster - Pro</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: sans-serif; background: #0f172a; color: white; padding-bottom: 180px; }
+        header { background: #1e293b; padding: 1rem; text-align: center; border-bottom: 2px solid #334155; }
+        .container { padding: 1rem; }
+        .preview { width: 100%; height: 300px; background: #000; border-radius: 1rem; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        video { width: 100%; height: 100%; object-fit: contain; }
         
-        // Se já estiver transmitindo, precisamos reiniciar o stream com a nova câmera
-        if (localStream) {
-            // Para o stream atual
-            localStream.getTracks().forEach(track => track.stop());
-            
-            // Re-inicia com o novo facingMode
-            restartStream();
-        } else {
-            alert("Modo alternado para: " + (currentFacingMode === "environment" ? "Traseira" : "Frontal"));
-        }
-    }
+        /* Agenda */
+        .agenda { background: #1e293b; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; }
+        .id-item { padding: 10px; background: #334155; margin-top: 5px; border-radius: 5px; cursor: pointer; }
+        
+        /* Rodapé Fixo */
+        .footer-action { position: fixed; bottom: 0; left: 0; width: 100%; background: #1e293b; padding: 1rem; border-top: 2px solid #334155; z-index: 1000; }
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        button { padding: 0.8rem; border: none; border-radius: 0.5rem; font-weight: bold; cursor: pointer; color: white; }
+        .btn-trans { background: #2563eb; }
+        .btn-magic { background: #7c3aed; }
+        .btn-rec { background: #ef4444; grid-column: span 2; }
+    </style>
+</head>
+<body>
 
-    async function restartStream() {
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: { exact: currentFacingMode } }, 
-                audio: true 
-            });
-            displayStream(localStream);
-            // Se houver uma chamada ativa (call), deve-se substituir a trilha (track)
-            if (window.activeCall) {
-                const videoTrack = localStream.getVideoTracks()[0];
-                const sender = window.activeCall.peerConnection.getSenders().find(s => s.track.kind === "video");
-                sender.replaceTrack(videoTrack);
-            }
-        } catch (err) {
-            // Fallback caso a câmera frontal/traseira não exista
-            alert("Erro ao trocar câmera: " + err.message);
-        }
-    }
-</script>
+    <header>
+        <div>ID: <b id="my-id">...</b></div>
+        <input type="text" id="new-id" placeholder="ID do amigo" style="padding:5px; width:70%;">
+        <button onclick="addFriend()">+</button>
+    </header>
 
-<div class="footer-action">
-    <div class="btn-row">
-        <button class="btn-magic" onclick="toggleCamera()">🔄 Inverter Câmera</button>
-        <button class="btn-transmit" onclick="startMirroring(true)">Transmitir</button>
+    <div class="container">
+        <div class="preview" id="preview-area"><div id="placeholder">🖥️ Câmera</div></div>
+        
+        <div class="agenda">
+            <h4>Agenda (Clique para conectar):</h4>
+            <div id="friend-list"></div>
+        </div>
     </div>
-</div>
+
+    <div class="footer-action">
+        <div class="btn-row">
+            <button class="btn-trans" onclick="startMirroring()">Transmitir</button>
+            <button class="btn-magic" onclick="toggleCamera()">🔄 Inverter Câmera</button>
+            <button class="btn-rec" id="rec-btn" onclick="toggleRecording()">🔴 Gravar Vídeo</button>
+        </div>
+    </div>
+
+    <script>
+        let peer, localStream, activeCall, mediaRecorder, chunks = [];
+        let facingMode = "environment";
+        let wakeLock = null;
+
+        // 1. Manter tela ligada
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                wakeLock = await navigator.wakeLock.request('screen');
+            }
+        }
+
+        // 2. PeerJS e Persistência
+        function init() {
+            let myId = localStorage.getItem('peer_id') || 'vc_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('peer_id', myId);
+            document.getElementById('my-id').innerText = myId;
+            peer = new Peer(myId);
+            loadFriends();
+            peer.on('call', (call) => {
+                call.answer();
+                call.on('stream', (s) => display(s));
+            });
+        }
+
+        // 3. Agenda
+        function addFriend() {
+            let id = document.getElementById('new-id').value;
+            let list = JSON.parse(localStorage.getItem('friends') || '[]');
+            list.push(id);
+            localStorage.setItem('friends', JSON.stringify(list));
+            loadFriends();
+        }
+
+        function loadFriends() {
+            let list = JSON.parse(localStorage.getItem('friends') || '[]');
+            let container = document.getElementById('friend-list');
+            container.innerHTML = '';
+            list.forEach(id => {
+                let d = document.createElement('div');
+                d.className = 'id-item';
+                d.innerText = id;
+                d.onclick = () => startMirroring(id);
+                container.appendChild(d);
+            });
+        }
+
+        // 4. Câmera e Transmissão
+        async function startMirroring(id = null) {
+            id = id || document.getElementById('new-id').value;
+            requestWakeLock();
+            localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio: true });
+            display(localStream);
+            activeCall = peer.call(id, localStream);
+        }
+
+        function toggleCamera() {
+            facingMode = (facingMode === "environment") ? "user" : "environment";
+            if (localStream) {
+                localStream.getTracks().forEach(t => t.stop());
+                startMirroring();
+            }
+        }
+
+        // 5. Gravação
+        function toggleRecording() {
+            if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                chunks = [];
+                mediaRecorder = new MediaRecorder(localStream);
+                mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    let blob = new Blob(chunks, {type: "video/webm"});
+                    let url = URL.createObjectURL(blob);
+                    let a = document.createElement('a');
+                    a.href = url; a.download = "video.webm"; a.click();
+                    alert("Vídeo gravado com sucesso!");
+                };
+                mediaRecorder.start();
+                document.getElementById('rec-btn').innerText = "⏹️ Parar Gravação";
+            } else {
+                mediaRecorder.stop();
+                document.getElementById('rec-btn').innerText = "🔴 Gravar Vídeo";
+            }
+        }
+
+        function display(s) {
+            const area = document.getElementById('preview-area');
+            area.innerHTML = `<video autoplay playsinline muted></video>`;
+            area.querySelector('video').srcObject = s;
+        }
+
+        window.onload = init;
+    </script>
+</body>
+    </html>
